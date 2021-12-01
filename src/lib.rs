@@ -1,6 +1,7 @@
-use std::{fs::File, io::{BufRead, BufReader, Lines}};
-
-mod day1;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Lines},
+};
 
 use anyhow::{Context, Result};
 
@@ -27,9 +28,36 @@ fn load_numbers(file_name: &str) -> Result<Vec<i64>> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn day1() -> Result<()> {
+        let depths = load_numbers("day1.txt")?;
+        let mut increases = 0;
+        let mut previous = None;
+        for d in &depths {
+            if let Some(p) = previous {
+                if *d > p {
+                    increases += 1;
+                }
+            }
+            previous = Some(*d)
+        }
+        assert_eq!(1681, increases);
+
+        increases = 0;
+        previous = None;
+        for w in depths.windows(3) {
+            let sum = w.iter().sum();
+            if let Some(p) = previous {
+                if sum > p {
+                    increases += 1;
+                }
+            }
+            previous = Some(sum);
+        }
+        assert_eq!(1704, increases);
+
+        Ok(())
     }
 }

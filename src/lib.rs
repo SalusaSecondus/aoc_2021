@@ -3,7 +3,12 @@ use std::{
     io::{BufRead, BufReader, Lines},
 };
 
+mod day2;
+mod day3;
+
 use anyhow::{Context, Result};
+#[macro_use]
+extern crate aoc_runner_derive;
 
 const FILE_BASE: &str = r"res\";
 
@@ -24,6 +29,22 @@ fn load_numbers(file_name: &str) -> Result<Vec<i64>> {
         result.push(line.parse()?);
     }
     Ok(result)
+}
+
+#[aoc_generator(day1)]
+fn day1_generator(input: &str) -> Vec<i32> {
+    input.lines().map(|d| d.parse().unwrap()).collect()
+    // vec![]
+}
+
+#[aoc(day1, part1)]
+fn day1_1(input: &[i32]) -> usize {
+    input.windows(2).map(|w| w[1] > w[0]).filter(|p| *p).count()
+}
+
+#[aoc(day1, part2)]
+fn day1_2(input: &[i32]) -> usize {
+    input.windows(4).map(|w| w[3] > w[0]).filter(|p| *p).count()
 }
 
 #[cfg(test)]
@@ -61,3 +82,5 @@ mod tests {
         Ok(())
     }
 }
+
+aoc_lib! { year = 2021 }

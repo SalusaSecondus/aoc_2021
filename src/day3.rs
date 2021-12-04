@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-#[derive(Debug,Default)]
+#[derive(Debug, Default)]
 struct Entry {
     value: String,
     ones: usize,
@@ -21,7 +21,7 @@ fn count_bits(input: &[String]) -> Vec<i32> {
             values[p] += match v[p] {
                 b'1' => 1,
                 b'0' => -1,
-                _  => panic!("Unexpected value")
+                _ => panic!("Unexpected value"),
             };
         }
     }
@@ -33,7 +33,7 @@ fn part1(input: &[String]) -> i32 {
     let mut gamma = String::new();
     let mut epsilon = String::new();
     let values = count_bits(input);
-    
+
     for b in &values {
         // gamma = gamma << 1;
         // epsilon = epsilon << 1;
@@ -55,26 +55,26 @@ fn part2(input: &[String]) -> i32 {
     let mut pos = 0;
     while working.len() != 1 {
         let values = count_bits(&working);
-        let target = if values[pos] >= 0 {
-            b'1'
-        } else {
-            b'0'
-        };
-        working = working.iter().filter(|v| v.as_bytes()[pos] == target).map(|v| v.to_owned()).collect();
+        let target = if values[pos] >= 0 { b'1' } else { b'0' };
+        working = working
+            .iter()
+            .filter(|v| v.as_bytes()[pos] == target)
+            .map(|v| v.to_owned())
+            .collect();
         pos += 1;
     }
     let oxygen = working[0].clone();
 
-        let mut working = input.to_owned();
+    let mut working = input.to_owned();
     let mut pos = 0;
     while working.len() != 1 {
         let values = count_bits(&working);
-        let target = if values[pos] < 0 {
-            b'1'
-        } else {
-            b'0'
-        };
-        working = working.iter().filter(|v| v.as_bytes()[pos] == target).map(|v| v.to_owned()).collect();
+        let target = if values[pos] < 0 { b'1' } else { b'0' };
+        working = working
+            .iter()
+            .filter(|v| v.as_bytes()[pos] == target)
+            .map(|v| v.to_owned())
+            .collect();
         pos += 1;
     }
     let co2 = working[0].clone();
@@ -88,7 +88,8 @@ fn part2(input: &[String]) -> i32 {
 mod tests {
     use super::*;
 
-    const SMOKE: &str = "00100\n11110\n10110\n10111\n10101\n01111\n00111\n11100\n10000\n11001\n00010\n01010";
+    const SMOKE: &str =
+        "00100\n11110\n10110\n10111\n10101\n01111\n00111\n11100\n10000\n11001\n00010\n01010";
 
     #[test]
     fn part1_smoke() {

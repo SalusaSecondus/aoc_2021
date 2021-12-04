@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 
 enum Instruction {
     Forward(i32),
@@ -52,14 +52,18 @@ fn input_generator(input: &str) -> Vec<Instruction> {
 #[aoc(day2, part1)]
 fn part1(instructions: &[Instruction]) -> i32 {
     let mut position = Position::default();
-    instructions.iter().for_each(|i| position = i.update_position(&position));
+    instructions
+        .iter()
+        .for_each(|i| position = i.update_position(&position));
     position.0 * position.1
 }
 
 #[aoc(day2, part2)]
 fn part2(instructions: &[Instruction]) -> i32 {
     let mut position = Position::default();
-    instructions.iter().for_each(|i| position = i.update_position2(&position));
+    instructions
+        .iter()
+        .for_each(|i| position = i.update_position2(&position));
     position.0 * position.1
 }
 

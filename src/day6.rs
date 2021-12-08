@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, str::FromStr};
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 
 #[derive(Clone, Copy)]
 struct Fish {
@@ -29,13 +29,13 @@ impl FromStr for Fish {
 }
 
 #[aoc_generator(day6)]
-fn input_generator(input: &str) -> Result<Vec<Fish>> {
-    input.split(',').map(|f| f.parse::<Fish>()).collect()
+fn input_generator(input: &str) -> Result<Vec<u8>> {
+    input.split(',').map(|f| f.parse::<u8>().context("Bad int")).collect()
 }
 
 #[aoc(day6, part1)]
-fn part1(input: &[Fish]) -> Result<usize> {
-    let mut input = input.to_vec();
+fn part1(input: &[u8]) -> Result<usize> {
+    let mut input: Vec<Fish> = input.iter().map(|phase| Fish {phase: *phase}).collect();
     for _day in 0..80 {
         // print!("Day {}:\t", _day);
         // for f in &input {
@@ -48,13 +48,13 @@ fn part1(input: &[Fish]) -> Result<usize> {
     Ok(input.len())
 }
 
-fn fast_count(input: &[Fish], days: usize) -> Result<u64> {
+fn fast_count(input: &[u8], days: usize) -> Result<u64> {
     let mut counts = [0u64; 7];
     let mut next_counts = VecDeque::new();
     next_counts.extend(std::iter::repeat(0).take(9));
 
     for f in input {
-        counts[f.phase as usize] += 1;
+        counts[*f as usize] += 1;
     }
     let mut ptr = 0;
     for _day in 0..days {
@@ -75,12 +75,12 @@ fn fast_count(input: &[Fish], days: usize) -> Result<u64> {
 }
 
 #[aoc(day6, part1, fast)]
-fn part1_array(input: &[Fish]) -> Result<u64> {
+fn part1_array(input: &[u8]) -> Result<u64> {
     fast_count(input, 80)
 }
 
 #[aoc(day6, part2, fast)]
-fn part2(input: &[Fish]) -> Result<u64> {
+fn part2(input: &[u8]) -> Result<u64> {
     fast_count(input, 256)
 }
 

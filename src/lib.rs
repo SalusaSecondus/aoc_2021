@@ -8,12 +8,18 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
+mod day8;
 
 use anyhow::{Context, Result};
 #[macro_use]
 extern crate aoc_runner_derive;
 
-const FILE_BASE: &str = r"res\";
+const FILE_BASE: &str = if cfg!(windows) {
+     r"res\"
+} else {
+    "res/"
+};
 
 pub fn read_file(file_name: &str) -> Result<Lines<BufReader<File>>> {
     let input = File::open(FILE_BASE.to_owned() + file_name).context("Could not open file")?;

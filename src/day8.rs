@@ -15,7 +15,7 @@ fn part2(input: &[i32]) -> Result<i32> {
     Ok(2)
 }
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
     const SMOKE: &str = "";

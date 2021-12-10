@@ -1,18 +1,24 @@
-use anyhow::{Result, Context, bail};
+use anyhow::{bail, Context, Result};
 use itertools::{Itertools, MinMaxResult};
 
 #[aoc_generator(day7)]
 fn input_generator(input: &str) -> Result<Vec<i64>> {
-    input.split(',').map(|f| f.parse::<i64>().context("bad int")).collect()
-} 
+    input
+        .split(',')
+        .map(|f| f.parse::<i64>().context("bad int"))
+        .collect()
+}
 
 fn cost(positions: &[i64], target: i64) -> i64 {
     positions.iter().map(|p| (*p - target).abs()).sum()
 }
 
-
 fn cost2(positions: &[i64], target: i64) -> i64 {
-    positions.iter().map(|p| (*p - target).abs()).map(|diff| ((diff + 1) * diff) / 2).sum()
+    positions
+        .iter()
+        .map(|p| (*p - target).abs())
+        .map(|diff| ((diff + 1) * diff) / 2)
+        .sum()
 }
 
 #[aoc(day7, part1)]
@@ -24,7 +30,6 @@ fn part1(input: &[i64]) -> Result<i64> {
             best = best.min(c);
         }
         return Ok(best);
-    
     }
     bail!("Insufficient elements");
 }
@@ -38,7 +43,6 @@ fn part2(input: &[i64]) -> Result<i64> {
             best = best.min(c);
         }
         return Ok(best);
-    
     }
     bail!("Insufficient elements");
 }

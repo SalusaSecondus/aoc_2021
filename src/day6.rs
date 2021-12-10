@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, str::FromStr};
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 
 #[derive(Clone, Copy)]
 struct Fish {
@@ -30,12 +30,15 @@ impl FromStr for Fish {
 
 #[aoc_generator(day6)]
 fn input_generator(input: &str) -> Result<Vec<u8>> {
-    input.split(',').map(|f| f.parse::<u8>().context("Bad int")).collect()
+    input
+        .split(',')
+        .map(|f| f.parse::<u8>().context("Bad int"))
+        .collect()
 }
 
 #[aoc(day6, part1)]
 fn part1(input: &[u8]) -> Result<usize> {
-    let mut input: Vec<Fish> = input.iter().map(|phase| Fish {phase: *phase}).collect();
+    let mut input: Vec<Fish> = input.iter().map(|phase| Fish { phase: *phase }).collect();
     for _day in 0..80 {
         // print!("Day {}:\t", _day);
         // for f in &input {

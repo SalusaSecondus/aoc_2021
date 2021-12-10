@@ -1,7 +1,6 @@
-use std::{collections::HashSet, thread::current};
+use std::collections::HashSet;
 
 use anyhow::Result;
-use colored::Colorize;
 use itertools::iproduct;
 
 #[aoc_generator(day9)]

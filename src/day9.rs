@@ -59,10 +59,10 @@ fn part2(input: &[Vec<u8>]) -> Result<u64> {
 
     for bottom in low_points {
         let mut visited = HashSet::new();
-        let mut queue = vec![bottom.clone()];
+        let mut queue = vec![bottom];
 
         while let Some(current) = queue.pop() {
-            visited.insert(current.clone());
+            visited.insert(current);
             // let elevation = input[current.1][current.0];
             for (x_off, y_off) in [(-1i32, 0i32), (1, 0), (0, -1), (0, 1)] {
                 let new_x = (current.0 as i32 + x_off) as usize;
@@ -84,7 +84,7 @@ fn part2(input: &[Vec<u8>]) -> Result<u64> {
         sizes.push(visited.len() as u64);
     }
 
-    sizes.sort();
+    sizes.sort_unstable();
     let mut result = 1u64;
     result *= sizes.pop().unwrap();
     result *= sizes.pop().unwrap();

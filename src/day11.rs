@@ -15,7 +15,7 @@ fn input_generator(input: &str) -> Result<Vec<Vec<i32>>> {
     Ok(result)
 }
 
-#[allow(dead_code)]
+#[allow(dead_code,clippy::needless_range_loop)]
 fn print_octopuses(input: &[Vec<i32>]) {
     for y in 0..10 {
         for x in 0..10 {
@@ -50,7 +50,7 @@ fn one_round(input: &mut [Vec<i32>]) -> i32 {
             }
             let x = octopus_coord.0 as i32 + x_off;
             let y = octopus_coord.1 as i32 + y_off;
-            if x < 0 || x > 9 || y < 0 || y > 9 {
+            if !(0..10).contains(&x) || !(0..10).contains(&y) {
                 continue;
             }
             let x = x as usize;

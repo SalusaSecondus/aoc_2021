@@ -64,7 +64,7 @@ fn find_close(line: &[char]) -> Option<Vec<char>> {
 #[aoc(day10, part1)]
 fn part1(input: &[Vec<char>]) -> Result<i32> {
     let mut result = 0;
-    for bad_char in input.iter().flat_map(|l| find_illegal_char(&l)) {
+    for bad_char in input.iter().flat_map(|l| find_illegal_char(l)) {
         result += match bad_char {
             ')' => 3,
             ']' => 57,
@@ -96,7 +96,7 @@ fn part2(input: &[Vec<char>]) -> Result<i32> {
         println!();
         scores.push(curr_score);
     }
-    scores.sort();
+    scores.sort_unstable();
     let middle = (scores.len() - 1) / 2;
     Ok(scores[middle])
 }

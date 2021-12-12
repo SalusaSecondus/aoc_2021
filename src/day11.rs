@@ -15,7 +15,7 @@ fn input_generator(input: &str) -> Result<Vec<Vec<i32>>> {
     Ok(result)
 }
 
-#[allow(dead_code,clippy::needless_range_loop)]
+#[allow(dead_code, clippy::needless_range_loop)]
 fn print_octopuses(input: &[Vec<i32>]) {
     for y in 0..10 {
         for x in 0..10 {

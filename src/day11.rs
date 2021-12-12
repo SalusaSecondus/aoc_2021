@@ -3,15 +3,20 @@ use std::collections::HashSet;
 use anyhow::Result;
 use itertools::iproduct;
 
+use crate::MatrixTranspose;
+
 #[aoc_generator(day11)]
 fn input_generator(input: &str) -> Result<Vec<Vec<i32>>> {
-    let mut result = vec![vec![0; 10]; 10];
-    for (y, line) in input.lines().enumerate() {
-        for (x, val) in line.bytes().enumerate() {
-            result[x][y] = (val - b'0') as i32;
-        }
-    }
-
+    let result: Vec<Vec<i32>> = input
+        .lines()
+        .map(|l| {
+            l.chars()
+                .map(|c| c as u8 - b'0')
+                .map(|b| b as i32)
+                .collect()
+        })
+        .collect();
+    let result: Vec<Vec<i32>> = result.transpose();
     Ok(result)
 }
 
@@ -120,6 +125,7 @@ mod tests {
     #[test]
     fn smoke1() -> Result<()> {
         let input = input_generator(SMOKE)?;
+        print_octopuses(&input);
         assert_eq!(1656, part1(&input)?);
         Ok(())
     }

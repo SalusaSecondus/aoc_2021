@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Lines},
+    io::{BufRead, BufReader, Lines}, collections::HashMap,
 };
 
 mod day10;
@@ -54,6 +54,42 @@ fn day1_1(input: &[i32]) -> usize {
 #[aoc(day1, part2)]
 fn day1_2(input: &[i32]) -> usize {
     input.windows(4).map(|w| w[3] > w[0]).filter(|p| *p).count()
+}
+
+pub trait MatrixTranspose {
+    fn transpose(&self) -> Self;
+}
+
+impl<T> MatrixTranspose for Vec<Vec<T>>
+where
+    T: Clone,
+{
+    fn transpose(&self) -> Self {
+        let old_y = self.len();
+        let old_x = self[0].len();
+        let mut result = vec![vec![]; old_y];
+
+        for y in 0..old_y {
+            for x in 0..old_x {
+                result[y].push(self[x][y].clone());
+            }
+        }
+        result
+    }
+}
+
+impl<K, V> MatrixTranspose for HashMap<(K, K), V>
+where
+    K: Copy + Eq + std::hash::Hash,
+    V: Clone
+{
+    fn transpose(&self) -> Self {
+        let mut result = HashMap::new();
+        for (k, v) in self {
+            result.insert((k.1, k.0), v.clone());
+        }
+        result
+    }
 }
 
 #[cfg(test)]

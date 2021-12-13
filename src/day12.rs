@@ -2,36 +2,26 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-struct Cave(String);
+use crate::Graph;
 
 fn is_large(name: &str) -> bool {
     name.chars().all(|c| c.is_uppercase())
 }
 
 #[aoc_generator(day12)]
-fn input_generator(input: &str) -> Result<HashMap<String, Vec<String>>> {
-    let mut cavern: HashMap<String, Vec<String>> = HashMap::new();
+fn input_generator(input: &str) -> Result<Graph<String>> {
+    let mut cavern = Graph::new(true);
     for (cave1, cave2) in input.lines().flat_map(|l| l.split_once("-")) {
-        cavern
-            .entry(cave1.to_string())
-            .or_default()
-            .push(cave2.to_string());
-        cavern
-            .entry(cave2.to_string())
-            .or_default()
-            .push(cave1.to_string());
+        cavern.add_edge(cave1.to_string(), cave2.to_string());
     }
 
-    for v in cavern.values_mut() {
-        v.sort_unstable();
-    }
+    cavern.sort();
     Ok(cavern)
 }
 
 fn enum_paths(
     start: &str,
-    cavern: &HashMap<String, Vec<String>>,
+    cavern: &Graph<String>,
     visited_small: &mut HashSet<String>,
     depth: usize,
 ) -> Vec<Vec<String>> {
@@ -43,7 +33,7 @@ fn enum_paths(
         return vec![vec!["end".to_string()]];
     }
     let mut result = vec![];
-    for next in cavern.get(start).unwrap() {
+    for next in cavern.edges(start).unwrap() {
         // for _ in 0..depth {
         //     print!(" ");
         // }
@@ -65,7 +55,7 @@ fn enum_paths(
 
 fn enum_paths2(
     start: &str,
-    cavern: &HashMap<String, Vec<String>>,
+    cavern: &Graph<String>,
     visited_small: &mut HashMap<String, i32>,
     depth: usize,
 ) -> Vec<Vec<String>> {
@@ -77,7 +67,7 @@ fn enum_paths2(
         return vec![vec!["end".to_string()]];
     }
     let mut result = vec![];
-    for next in cavern.get(start).unwrap() {
+    for next in cavern.edges(start).unwrap() {
         if next == "start" {
             continue;
         }
@@ -115,7 +105,7 @@ fn can_fit(name: &str, visited_small: &mut HashMap<String, i32>) -> bool {
 }
 
 #[aoc(day12, part1)]
-fn part1(input: &HashMap<String, Vec<String>>) -> Result<usize> {
+fn part1(input: &Graph<String>) -> Result<usize> {
     let mut visited_small = HashSet::new();
     visited_small.insert("start".to_string());
     let paths = enum_paths("start", input, &mut visited_small, 0);
@@ -125,7 +115,7 @@ fn part1(input: &HashMap<String, Vec<String>>) -> Result<usize> {
 }
 
 #[aoc(day12, part2)]
-fn part2(input: &HashMap<String, Vec<String>>) -> Result<usize> {
+fn part2(input: &Graph<String>) -> Result<usize> {
     let mut visited_small = HashMap::new();
     // visited_small.insert("start".to_string(), 2);
     let paths = enum_paths2("start", input, &mut visited_small, 0);
@@ -149,6 +139,7 @@ b-end";
     #[test]
     fn smoke1() -> Result<()> {
         let input = input_generator(SMOKE)?;
+        println!("Graph:\n{}", input);
         assert_eq!(10, part1(&input)?);
         Ok(())
     }

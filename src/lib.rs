@@ -1,11 +1,15 @@
 use std::{
+    collections::HashMap,
+    fmt::Display,
     fs::File,
-    io::{BufRead, BufReader, Lines}, collections::HashMap,
+    hash::Hash,
+    io::{BufRead, BufReader, Lines}, borrow::Borrow,
 };
 
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 mod day2;
 mod day3;
 mod day4;
@@ -81,7 +85,7 @@ where
 impl<K, V> MatrixTranspose for HashMap<(K, K), V>
 where
     K: Copy + Eq + std::hash::Hash,
-    V: Clone
+    V: Clone,
 {
     fn transpose(&self) -> Self {
         let mut result = HashMap::new();
@@ -89,6 +93,93 @@ where
             result.insert((k.1, k.0), v.clone());
         }
         result
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Graph<T>
+where
+    T: Clone + Eq + Hash,
+{
+    digraph: bool,
+    map: HashMap<T, Vec<T>>,
+}
+
+impl<T> Graph<T>
+where
+    T: Clone + Eq + Hash,
+{
+    pub fn new(digraph: bool) -> Self {
+        Self {
+            digraph,
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn add_edge(&mut self, from: T, to: T) {
+        if self.digraph {
+            self.map.entry(to.clone()).or_default().push(from.clone());
+        }
+        self.map.entry(from).or_default().push(to);
+
+    }
+
+    pub fn nodes(&self) -> std::collections::hash_map::Keys<T, Vec<T>> {
+        self.map.keys()
+    }
+
+    pub fn edges<Q: ?Sized>(&self, node: &Q) -> Option<&Vec<T>> where 
+    T: Borrow<Q>,
+    Q: Hash + Eq, {
+        self.map.get(node)
+    }
+}
+
+impl<T> MatrixTranspose for Graph<T>
+where
+    T: Clone + Eq + Hash,
+{
+    fn transpose(&self) -> Self {
+        if self.digraph {
+            return self.clone();
+        } else {
+            let mut result = Graph::new(self.digraph);
+            for (node, edges) in &self.map {
+                for dest in edges {
+                    result.add_edge(dest.clone(), node.clone());
+                }
+            }
+            return result;
+        }
+    }
+}
+
+impl<T> Graph<T>
+where
+    T: Ord + Clone + Eq + Hash,
+{
+    pub fn sort(&mut self) {
+        self.map.values_mut().for_each(|v| v.sort_unstable());
+    }
+}
+
+impl<T> Display for Graph<T>
+where
+    T: Clone + Eq + Hash + Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for e in &self.map {
+            write!(f, "{} ->", e.0)?;
+            for v in e.1.iter().enumerate() {
+                if v.0 == 0 {
+                    write!(f, " {}", v.1)?;
+                } else {
+                    write!(f, ", {}", v.1)?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
 

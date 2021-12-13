@@ -1,9 +1,10 @@
 use std::{
+    borrow::Borrow,
     collections::HashMap,
     fmt::Display,
     fs::File,
     hash::Hash,
-    io::{BufRead, BufReader, Lines}, borrow::Borrow,
+    io::{BufRead, BufReader, Lines},
 };
 
 mod day10;
@@ -68,6 +69,7 @@ impl<T> MatrixTranspose for Vec<Vec<T>>
 where
     T: Clone,
 {
+    #[allow(clippy::needless_range_loop)]
     fn transpose(&self) -> Self {
         let old_y = self.len();
         let old_x = self[0].len();
@@ -121,16 +123,17 @@ where
             self.map.entry(to.clone()).or_default().push(from.clone());
         }
         self.map.entry(from).or_default().push(to);
-
     }
 
     pub fn nodes(&self) -> std::collections::hash_map::Keys<T, Vec<T>> {
         self.map.keys()
     }
 
-    pub fn edges<Q: ?Sized>(&self, node: &Q) -> Option<&Vec<T>> where 
-    T: Borrow<Q>,
-    Q: Hash + Eq, {
+    pub fn edges<Q: ?Sized>(&self, node: &Q) -> Option<&Vec<T>>
+    where
+        T: Borrow<Q>,
+        Q: Hash + Eq,
+    {
         self.map.get(node)
     }
 }
@@ -141,7 +144,7 @@ where
 {
     fn transpose(&self) -> Self {
         if self.digraph {
-            return self.clone();
+            self.clone()
         } else {
             let mut result = Graph::new(self.digraph);
             for (node, edges) in &self.map {
@@ -149,7 +152,7 @@ where
                     result.add_edge(dest.clone(), node.clone());
                 }
             }
-            return result;
+            result
         }
     }
 }

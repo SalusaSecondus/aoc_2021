@@ -12,6 +12,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 mod day2;
 mod day3;
 mod day4;
@@ -184,6 +185,35 @@ where
             writeln!(f)?;
         }
         Ok(())
+    }
+}
+
+pub struct ReplacementEngine<T>
+where
+    T: Hash + Eq + Clone,
+{
+    pub elements: HashMap<T, u64>,
+    pub rules: HashMap<T, Vec<(T, u64)>>,
+}
+
+impl<T> ReplacementEngine<T>
+where
+    T: Hash + Eq + Clone,
+{
+    pub fn new(elements: HashMap<T, u64>, rules: HashMap<T, Vec<(T, u64)>>) -> Self {
+        Self { elements, rules }
+    }
+
+    pub fn step(&mut self) {
+        let mut result = HashMap::new();
+        for (node, count) in &self.elements {
+            if let Some(replacements) = self.rules.get(node) {
+                for r in replacements {
+                    *result.entry(r.0.to_owned()).or_default() += *count * r.1;
+                }
+            }
+        }
+        self.elements = result;
     }
 }
 

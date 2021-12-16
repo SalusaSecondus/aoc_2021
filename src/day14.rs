@@ -4,6 +4,8 @@ use anyhow::{bail, Context, Result};
 use itertools::{Itertools, MinMaxResult};
 use regex::Regex;
 
+use crate::ReplacementEngine;
+
 type Input = (String, HashMap<String, String>);
 
 #[aoc_generator(day14)]
@@ -134,6 +136,67 @@ fn part2(input: &Input) -> Result<usize> {
     pair_iteration(input, 40)
 }
 
+fn build_replacement_rules(
+    rules: &HashMap<String, String>,
+) -> HashMap<(char, char), Vec<((char, char), u64)>> {
+    let mut result = HashMap::new();
+
+    for (key, value) in rules {
+        let key: Vec<char> = key.chars().collect();
+        let value = value.chars().next().unwrap();
+        let left = (key[0], value);
+        let right = (value, key[1]);
+        result.insert((key[0], key[1]), vec![(left, 1), (right, 1)]);
+    }
+    result
+}
+
+fn engine_iteration(input: &Input, steps: usize) -> Result<u64> {
+    let pairs = str_to_pairs(&input.0)
+        .iter()
+        .map(|(k, v)| (*k, *v as u64))
+        .collect();
+
+    let rules = build_replacement_rules(&input.1);
+
+    let mut engine = ReplacementEngine::new(pairs, rules);
+    for _step in 1..=steps {
+        engine.step();
+    }
+
+    let mut counts = HashMap::new();
+    for (p, c) in &engine.elements {
+        // The first elements are always the second element of something except the very first which we special case
+        *counts.entry(p.1).or_default() += c;
+    }
+
+    let mut template = input.0.chars();
+    let first = template.next().unwrap();
+    // let last = template.last().unwrap();
+    *counts.entry(first).or_default() += 1;
+
+    // Avoid double counting first and last element. All others show up twice
+
+    let extremes = counts
+        .iter()
+        .minmax_by(|a: &(&char, &u64), b: &(&char, &u64)| a.1.cmp(b.1));
+    if let MinMaxResult::MinMax(min, max) = extremes {
+        Ok(max.1 - min.1)
+    } else {
+        bail!("No min/max");
+    }
+}
+
+#[aoc(day14, part1, engine)]
+fn part1_engine(input: &Input) -> Result<u64> {
+    engine_iteration(input, 10)
+}
+
+#[aoc(day14, part2, engine)]
+fn part2_engine(input: &Input) -> Result<u64> {
+    engine_iteration(input, 40)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,6 +229,13 @@ CN -> C";
 
     #[test]
     fn smoke1_pairs() -> Result<()> {
+        let input = input_generator(SMOKE)?;
+        assert_eq!(1588, part1_pairs(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke1_engine() -> Result<()> {
         let input = input_generator(SMOKE)?;
         assert_eq!(1588, part1_pairs(&input)?);
         Ok(())

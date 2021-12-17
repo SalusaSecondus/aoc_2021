@@ -1,5 +1,4 @@
 use anyhow::{bail, Context, Result};
-use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Operator {
@@ -144,30 +143,23 @@ fn parse_nibble(nibble: char) -> u8 {
 
 #[aoc_generator(day16)]
 fn input_generator(input: &str) -> Result<Packet> {
-    let mut bytes = vec![];
-    for mut chunk in &input.chars().map(parse_nibble).into_iter().chunks(2) {
-        let mut byte = chunk.next().unwrap() << 4;
-        if let Some(next) = chunk.next() {
-            byte += next;
-        }
-        bytes.push(byte);
-    }
-    let mut iter = bit_iterator(&bytes);
+    let mut iter = bit_iterator(input.chars().map(parse_nibble));
+
     Packet::from_iter(&mut iter)
 }
 
-fn byte_to_bits(byte: u8) -> [u8; 8] {
-    let mut result = [0; 8];
+fn byte_to_bits(byte: u8) -> [u8; 4] {
+    let mut result = [0; 4];
     let mut byte = byte;
-    for idx in (0..8).rev() {
+    for idx in (0..4).rev() {
         result[idx] = byte & 1;
         byte >>= 1;
     }
     result
 }
 
-fn bit_iterator(bytes: &[u8]) -> impl Iterator<Item = u8> + '_ {
-    bytes.iter().flat_map(|b| byte_to_bits(*b))
+fn bit_iterator(bytes: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
+    bytes.flat_map(|b| byte_to_bits(b))
 }
 
 #[aoc(day16, part1)]

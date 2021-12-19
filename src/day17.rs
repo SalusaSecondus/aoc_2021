@@ -40,10 +40,10 @@ impl Input {
 fn input_generator(input: &str) -> Result<Input> {
     let re = Regex::new("target area: x=(-?\\d+)..(-?\\d+), y=(-?\\d+)..(-?\\d+)")?;
     let groups = re.captures(input).context("No match")?;
-    let min_x = i32::from_str_radix(groups.get(1).unwrap().as_str(), 10)?;
-    let max_x = i32::from_str_radix(groups.get(2).unwrap().as_str(), 10)?;
-    let min_y = i32::from_str_radix(groups.get(3).unwrap().as_str(), 10)?;
-    let max_y = i32::from_str_radix(groups.get(4).unwrap().as_str(), 10)?;
+    let min_x = groups.get(1).unwrap().as_str().parse::<i32>()?;
+    let max_x = groups.get(2).unwrap().as_str().parse::<i32>()?;
+    let min_y = groups.get(3).unwrap().as_str().parse::<i32>()?;
+    let max_y = groups.get(4).unwrap().as_str().parse::<i32>()?;
 
     Ok(Input::new(min_x, max_x, min_y, max_y))
 }

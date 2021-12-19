@@ -14,7 +14,7 @@ enum Operator {
 impl Operator {
     fn apply(&self, contents: &[Packet]) -> Result<u64> {
         let values: Vec<u64> = contents
-            .into_iter()
+            .iter()
             .map(|p| p.value())
             .collect::<Result<Vec<u64>>>()?;
         match self {
@@ -159,7 +159,7 @@ fn byte_to_bits(byte: u8) -> [u8; 4] {
 }
 
 fn bit_iterator(bytes: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
-    bytes.flat_map(|b| byte_to_bits(b))
+    bytes.flat_map(byte_to_bits)
 }
 
 #[aoc(day16, part1)]

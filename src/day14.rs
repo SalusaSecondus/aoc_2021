@@ -136,6 +136,7 @@ fn part2(input: &Input) -> Result<usize> {
     pair_iteration(input, 40)
 }
 
+#[allow(clippy::type_complexity)]
 fn build_replacement_rules(
     rules: &HashMap<String, String>,
 ) -> HashMap<(char, char), Vec<((char, char), u64)>> {

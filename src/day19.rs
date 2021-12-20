@@ -153,7 +153,7 @@ fn build_world(input: &[Scanner]) -> Vec<Scanner> {
     let mut known_bad = HashSet::new();
 
     while !input.is_empty() {
-        // println!("Base size = {}", known_scanners.len());
+        println!("Base size = {}", known_scanners.len());
         'next_scanner: for base in &known_scanners {
             for idx in 0..input.len() {
                 let rel = input.get_mut(idx).unwrap();

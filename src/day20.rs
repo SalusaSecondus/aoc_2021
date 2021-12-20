@@ -37,6 +37,41 @@ impl Image {
         iproduct!(coord.1 - 1..=coord.1 + 1, coord.0 - 1..=coord.0 + 1).map(|c| (c.1, c.0))
     }
 
+    fn enhance2(&mut self) {
+        let mut result = HashSet::new();
+        for x in self.min_x - 1..=self.max_x + 1 {
+            let mut idx = self.n2int(&mut Self::neighborhood(&(x, self.min_y - 2)));
+            for y in self.min_y - 1..=self.max_y + 1 {
+                let center = (x, y);
+                // idx >>= 3;
+                // let mut tmp_idx = 0;
+                for offset_x in x - 1..=x + 1 {
+                    idx <<= 1;
+                    if self.read_pixel(&(offset_x, y + 1)) {
+                        idx += 1;
+                    }
+                }
+                // tmp_idx <<= 6;
+                idx &= 0x01ff;
+                // println!("\t=>{:?}", center);
+                // assert_eq!(idx, self.n2int(&mut Self::neighborhood(&center)));
+                if self.enhancer[idx] {
+                    result.insert(center);
+                }
+            }
+        }
+        self.pixels = result;
+        let ((min_x, min_y), (max_x, max_y)) = Self::min_max(&self.pixels);
+        self.min_x = min_x;
+        self.max_x = max_x;
+        self.min_y = min_y;
+        self.max_y = max_y;
+
+        if self.enhancer[0] && !self.enhancer[511] {
+            self.base_pixel = !self.base_pixel;
+        }
+    }
+
     fn enhance(&mut self) {
         let mut result = HashSet::new();
         for center in iproduct!(
@@ -64,17 +99,27 @@ impl Image {
         let mut result = 0;
         for n in iter {
             result <<= 1;
-            #[allow(clippy::if_same_then_else)]
-            if self.base_pixel
-                && (n.0 < self.min_x || n.0 > self.max_x || n.1 < self.min_y || n.1 > self.max_y)
-            {
-                result += 1;
-            } else if self.pixels.contains(&n) {
+            if self.read_pixel(&n) {
                 result += 1;
             }
         }
 
         result
+    }
+
+    fn read_pixel(&self, coord: &Coord) -> bool {
+        #[allow(clippy::if_same_then_else)]
+        if self.base_pixel
+            && (coord.0 < self.min_x
+                || coord.0 > self.max_x
+                || coord.1 < self.min_y
+                || coord.1 > self.max_y)
+        {
+            return true;
+        } else if self.pixels.contains(coord) {
+            return true;
+        }
+        false
     }
 
     fn new(enhancer: Vec<bool>, pixels: HashSet<Coord>) -> Self {
@@ -154,6 +199,28 @@ fn part2(input: &Image) -> Result<usize> {
     Ok(image.pixels.len())
 }
 
+#[aoc(day20, part1, window)]
+fn part1_window(input: &Image) -> Result<usize> {
+    let mut image = input.to_owned();
+    // let enhancer = image.enhancer.clone();
+    // println!("Enhancer: {}", enhancer.iter().map(|b| match b { true => "#".to_string(), false => ".".to_string()}).reduce(|a, b| a + &b).unwrap());
+    // println!("{}", image);
+    image.enhance2();
+    // println!("{}", image);
+    image.enhance2();
+    // println!("{}", image);
+    Ok(image.pixels.len())
+}
+
+#[aoc(day20, part2, window)]
+fn part2_window(input: &Image) -> Result<usize> {
+    let mut image = input.to_owned();
+    for _ in 0..50 {
+        image.enhance2();
+    }
+    Ok(image.pixels.len())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -193,6 +260,20 @@ mod tests {
     fn smoke2() -> Result<()> {
         let input = input_generator(SMOKE)?;
         assert_eq!(3351, part2(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke1_window() -> Result<()> {
+        let input = input_generator(SMOKE)?;
+        assert_eq!(35, part1_window(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke2_window() -> Result<()> {
+        let input = input_generator(SMOKE)?;
+        assert_eq!(3351, part2_window(&input)?);
         Ok(())
     }
 }

@@ -1,9 +1,9 @@
-use std::{ops::RangeInclusive, str::FromStr};
+use std::{fmt::Display, ops::RangeInclusive, str::FromStr};
 
 use anyhow::{Context, Result};
 use itertools::iproduct;
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
 
 type Coord = [i64; 3];
 
@@ -14,15 +14,18 @@ struct Cube {
     on: bool,
     x: RangeInclusive<i64>,
     y: RangeInclusive<i64>,
-    z: RangeInclusive<i64>
+    z: RangeInclusive<i64>,
 }
 
 impl FromStr for Cube {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        lazy_static!{
-            static ref RE: Regex = Regex::new("\\s*(\\S+) x=(-?\\d+)..(-?\\d+),y=(-?\\d+)..(-?\\d+),z=(-?\\d+)..(-?\\d+)").unwrap();
+        lazy_static! {
+            static ref RE: Regex = Regex::new(
+                "\\s*(\\S+) x=(-?\\d+)..(-?\\d+),y=(-?\\d+)..(-?\\d+),z=(-?\\d+)..(-?\\d+)"
+            )
+            .unwrap();
         };
         let captures = RE.captures(s).context("No match")?;
         let on = captures.get(1).context("Missing action")?.as_str() == "on";
@@ -35,48 +38,97 @@ impl FromStr for Cube {
         let x = x_min..=x_max;
         let y = y_min..=y_max;
         let z = z_min..=z_max;
-        Ok(Self {on, x, y ,z})
+        Ok(Self { on, x, y, z })
+    }
+}
+
+impl Display for Cube {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let state = if self.on { "on" } else { "off" };
+        write!(
+            f,
+            "{} x={}..{},y={}..{},z={}..{}",
+            state,
+            self.x_min(),
+            self.x_max(),
+            self.y_min(),
+            self.y_max(),
+            self.z_min(),
+            self.z_max()
+        )
     }
 }
 
 impl Cube {
-    fn new(on: bool, x_min: i64, x_max: i64, y_min: i64, y_max: i64, z_min: i64, z_max: i64) -> Self {
+    fn new(
+        on: bool,
+        x_min: i64,
+        x_max: i64,
+        y_min: i64,
+        y_max: i64,
+        z_min: i64,
+        z_max: i64,
+    ) -> Self {
         let x = x_min..=x_max;
         let y = y_min..=y_max;
         let z = z_min..=z_max;
-        Self {on, x, y ,z}
+        Self { on, x, y, z }
     }
 
+    fn x_min(&self) -> i64 {
+        *self.x.start()
+    }
+
+    fn x_max(&self) -> i64 {
+        *self.x.end()
+    }
+
+    fn y_min(&self) -> i64 {
+        *self.y.start()
+    }
+
+    fn y_max(&self) -> i64 {
+        *self.y.end()
+    }
+
+    fn z_min(&self) -> i64 {
+        *self.z.start()
+    }
+
+    fn z_max(&self) -> i64 {
+        *self.z.end()
+    }
     fn contains(&self, point: &Coord) -> bool {
         self.x.contains(&point[0]) && self.y.contains(&point[1]) && self.z.contains(&point[2])
     }
 
     fn is_init(&self) -> bool {
-        INIT_RANGE.contains(self.x.start()) &&
-        INIT_RANGE.contains(self.x.end()) &&
-        INIT_RANGE.contains(self.y.start()) &&
-        INIT_RANGE.contains(self.y.end()) &&
-        INIT_RANGE.contains(self.z.start()) &&
-        INIT_RANGE.contains(self.z.end())
-    }        
-
-    fn disjoint(&self, other: &Cube) -> bool {
-        self.x.start() > other.x.end() ||
-        self.x.end() < other.x.start() ||
-        self.y.start() > other.y.end() ||
-        self.y.end() < other.y.start() ||
-        self.z.start() > other.z.end() ||
-        self.z.end() < other.z.start()
+        INIT_RANGE.contains(self.x.start())
+            && INIT_RANGE.contains(self.x.end())
+            && INIT_RANGE.contains(self.y.start())
+            && INIT_RANGE.contains(self.y.end())
+            && INIT_RANGE.contains(self.z.start())
+            && INIT_RANGE.contains(self.z.end())
     }
 
+    fn disjoint(&self, other: &Cube) -> bool {
+        self.x.start() > other.x.end()
+            || self.x.end() < other.x.start()
+            || self.y.start() > other.y.end()
+            || self.y.end() < other.y.start()
+            || self.z.start() > other.z.end()
+            || self.z.end() < other.z.start()
+    }
+
+    #[allow(dead_code)]
     fn overlaps(&self, other: &Cube) -> bool {
         !self.disjoint(other)
     }
 
     fn volume(&self) -> i64 {
-        (self.x.end() - self.x.start()) *
-        (self.y.end() - self.y.start()) *
-        (self.z.end() - self.z.start())
+        (self.x.end() - self.x.start() + 1)
+            * (self.y.end() - self.y.start() + 1)
+            * (self.z.end() - self.z.start() + 1)
     }
 
     fn overlap(&self, other: &Cube) -> Option<Cube> {
@@ -89,111 +141,239 @@ impl Cube {
         let x_max = *self.x.end().min(other.x.end());
         let y_min = *self.y.start().max(other.y.start());
         let y_max = *self.y.end().min(other.y.end());
-        let z_min = *self.x.start().max(other.z.start());
-        let z_max = *self.x.end().min(other.z.end());
-        
+        let z_min = *self.z.start().max(other.z.start());
+        let z_max = *self.z.end().min(other.z.end());
+
         let x = x_min..=x_max;
         let y = y_min..=y_max;
         let z = z_min..=z_max;
-        Some(Self {x, y ,z, on: self.on })
+        let result = Self {
+            x,
+            y,
+            z,
+            on: other.on,
+        };
+        // println!("\t\tOverlap between {} and {} is {}", self, other, result);
+        Some(result)
     }
 
     fn merge(&self, other: &Cube) -> Option<Vec<Cube>> {
-        let overlap = self.overlap(other);
-        if overlap.is_none() {
-            return None;
+        if !self.on {
+            panic!("Only support merge if first cube is on");
         }
-        let overlap = overlap.unwrap();
+        let overlap = self.overlap(other)?;
         let mut result = vec![];
-        if self.x.start() < overlap.x.start() {
-            let x_min = *self.x.start();
-            let x_max = overlap.x.start() - 1;
-            result.push(Cube {x: x_min..=x_max, .. self.clone()});
+        if self.x_min() < overlap.x_min() {
+            let x_max = overlap.x_min() - 1;
+            let y_min = self.y_min().max(overlap.y_min());
+            let y_max = self.y_max().min(overlap.y_max());
+            let z_min = self.z_min().max(overlap.z_min());
+            let z_max = self.z_max().min(overlap.z_max());
+            result.push(Cube::new(
+                true,
+                self.x_min(),
+                x_max,
+                y_min,
+                y_max,
+                z_min,
+                z_max,
+            ));
         }
-        if other.x.start() < overlap.x.start() {
-            let x_min = *other.x.start();
-            let x_max = overlap.x.start() - 1;
-            result.push(Cube {x: x_min..=x_max, .. other.clone()});
+        if self.x_max() > overlap.x_max() {
+            let x_min = overlap.x_max() + 1;
+            let y_min = self.y_min().max(overlap.y_min());
+            let y_max = self.y_max().min(overlap.y_max());
+            let z_min = self.z_min().max(overlap.z_min());
+            let z_max = self.z_max().min(overlap.z_max());
+            result.push(Cube::new(
+                true,
+                x_min,
+                self.x_max(),
+                y_min,
+                y_max,
+                z_min,
+                z_max,
+            ));
         }
-        if self.y.start() < overlap.y.start() {
-            let y_min = *self.y.start();
-            let y_max = overlap.y.start() - 1;
-            result.push(Cube {y: y_min..=y_max, .. self.clone()});
+        if self.y_min() < overlap.y_min() {
+            let y_max = overlap.y_min() - 1;
+            let z_min = self.z_min().max(overlap.z_min());
+            let z_max = self.z_max().min(overlap.z_max());
+            result.push(Cube::new(
+                true,
+                self.x_min(),
+                self.x_max(),
+                self.y_min(),
+                y_max,
+                z_min,
+                z_max,
+            ));
         }
-        if other.y.start() < overlap.y.start() {
-            let y_min = *other.y.start();
-            let y_max = overlap.y.start() - 1;
-            result.push(Cube {y: y_min..=y_max, .. other.clone()});
+        if self.y_max() > overlap.y_max() {
+            let y_min = overlap.y_max() + 1;
+            let z_min = self.z_min().max(overlap.z_min());
+            let z_max = self.z_max().min(overlap.z_max());
+            result.push(Cube::new(
+                true,
+                self.x_min(),
+                self.x_max(),
+                y_min,
+                self.y_max(),
+                z_min,
+                z_max,
+            ));
         }
-        if self.z.start() < overlap.z.start() {
-            let z_min = *self.z.start();
-            let z_max = overlap.z.start() - 1;
-            result.push(Cube {z: z_min..=z_max, .. self.clone()});
+        if self.z_min() < overlap.z_min() {
+            let z_max = overlap.z_min() - 1;
+            result.push(Cube::new(
+                true,
+                self.x_min(),
+                self.x_max(),
+                self.y_min(),
+                self.y_max(),
+                self.z_min(),
+                z_max,
+            ));
         }
-        if other.z.start() < overlap.z.start() {
-            let z_min = *other.z.start();
-            let z_max = overlap.z.start() - 1;
-            result.push(Cube {z: z_min..=z_max, .. other.clone()});
+        if self.z_max() > overlap.z_max() {
+            let z_min = overlap.z_max() + 1;
+            result.push(Cube::new(
+                true,
+                self.x_min(),
+                self.x_max(),
+                self.y_min(),
+                self.y_max(),
+                z_min,
+                self.z_max(),
+            ));
         }
 
-        if self.x.end() > overlap.x.end() {
-            let x_min = overlap.x.end() + 1;
-            let x_max = *self.x.start();
-            result.push(Cube {x: x_min..=x_max, .. self.clone()});
+        if other.on {
+            if other.x_min() < overlap.x_min() {
+                let x_max = overlap.x_min() - 1;
+                let y_min = other.y_min().max(overlap.y_min());
+                let y_max = other.y_max().min(overlap.y_max());
+                let z_min = other.z_min().max(overlap.z_min());
+                let z_max = other.z_max().min(overlap.z_max());
+                result.push(Cube::new(
+                    true,
+                    other.x_min(),
+                    x_max,
+                    y_min,
+                    y_max,
+                    z_min,
+                    z_max,
+                ));
+            }
+            if other.x_max() > overlap.x_max() {
+                let x_min = overlap.x_max() + 1;
+                let y_min = other.y_min().max(overlap.y_min());
+                let y_max = other.y_max().min(overlap.y_max());
+                let z_min = other.z_min().max(overlap.z_min());
+                let z_max = other.z_max().min(overlap.z_max());
+                result.push(Cube::new(
+                    true,
+                    x_min,
+                    other.x_max(),
+                    y_min,
+                    y_max,
+                    z_min,
+                    z_max,
+                ));
+            }
+            if other.y_min() < overlap.y_min() {
+                let y_max = overlap.y_min() - 1;
+                let z_min = other.z_min().max(overlap.z_min());
+                let z_max = other.z_max().min(overlap.z_max());
+                result.push(Cube::new(
+                    true,
+                    other.x_min(),
+                    other.x_max(),
+                    other.y_min(),
+                    y_max,
+                    z_min,
+                    z_max,
+                ));
+            }
+            if other.y_max() > overlap.y_max() {
+                let y_min = overlap.y_max() + 1;
+                let z_min = other.z_min().max(overlap.z_min());
+                let z_max = other.z_max().min(overlap.z_max());
+                result.push(Cube::new(
+                    true,
+                    other.x_min(),
+                    other.x_max(),
+                    y_min,
+                    other.y_max(),
+                    z_min,
+                    z_max,
+                ));
+            }
+            if other.z_min() < overlap.z_min() {
+                let z_max = overlap.z_min() - 1;
+                result.push(Cube::new(
+                    true,
+                    other.x_min(),
+                    other.x_max(),
+                    other.y_min(),
+                    other.y_max(),
+                    other.z_min(),
+                    z_max,
+                ));
+            }
+            if other.z_max() > overlap.z_max() {
+                let z_min = overlap.z_max() + 1;
+                result.push(Cube::new(
+                    true,
+                    other.x_min(),
+                    other.x_max(),
+                    other.y_min(),
+                    other.y_max(),
+                    z_min,
+                    other.z_max(),
+                ));
+            }
+            result.push(overlap);
         }
-        if other.x.end() > overlap.x.end() {
-            let x_min = overlap.x.end() + 1;
-            let x_max = *other.x.start();
-            result.push(Cube {x: x_min..=x_max, .. other.clone()});
-        }
-        if self.y.end() > overlap.y.end() {
-            let y_min = overlap.y.end() + 1;
-            let y_max = *self.y.start();
-            result.push(Cube {y: y_min..=y_max, .. self.clone()});
-        }
-        if other.y.end() > overlap.y.end() {
-            let y_min = overlap.y.end() + 1;
-            let y_max = *other.y.start();
-            result.push(Cube {y: y_min..=y_max, .. other.clone()});
-        }
-        if self.z.end() > overlap.z.end() {
-            let z_min = overlap.z.end() + 1;
-            let z_max = *self.z.start();
-            result.push(Cube {z: z_min..=z_max, .. self.clone()});
-        }
-        if other.z.end() > overlap.z.end() {
-            let z_min = overlap.z.end() + 1;
-            let z_max = *other.z.start();
-            result.push(Cube {z: z_min..=z_max, .. other.clone()});
-        }
-        result.push(overlap);
         Some(result)
     }
 }
 
 type Input = Vec<Cube>;
 
-fn to_series(cubes: &Input) -> Vec<Vec<Cube>> {
-    let mut result = vec![];
-
-    let mut curr_status = true;
-    let mut curr_series = vec![];
-    for c in cubes {
-        if c.on != curr_status {
-            result.push(curr_series);
-            curr_status = c.on;
-            curr_series = vec![];
-        }
-        if curr_series.is_empty() {
-            curr_series.push(c.to_owned());
-        } else {
-            let mut separated = vec![];
-            while !curr_series.is_empty() {
-                
+fn add_to_disjoint(disjoint: Vec<Cube>, cube: Cube) -> Vec<Cube> {
+    let mut disjoint = disjoint;
+    let mut src = vec![cube];
+    'outer: while !src.is_empty() {
+        let cube = src.pop().unwrap();
+        for d_idx in 0..disjoint.len() {
+            let d = &disjoint[d_idx];
+            if let Some(mut shattered) = d.merge(&cube) {
+                disjoint.remove(d_idx);
+                // println!("\tFound overlap and created {} new cubes", shattered.len());
+                src.append(&mut shattered);
+                if !cube.on {
+                    src.push(cube);
+                }
+                continue 'outer;
             }
         }
+        if cube.on {
+            disjoint.push(cube);
+        }
     }
-    result
+    disjoint
+}
+
+fn find_volume(cubes: &[Cube]) -> i64 {
+    let mut disjoint: Vec<Cube> = vec![];
+    for (_idx, c) in cubes.iter().enumerate() {
+        // let volume: i64 = disjoint.iter().map(|c| c.volume()).sum();
+        // println!("{}: Disjoint={} (Volume={})", _idx, disjoint.len(), volume);
+        disjoint = add_to_disjoint(disjoint, c.to_owned());
+    }
+    // println!("final: Disjoint={}", disjoint.len());
+    disjoint.iter().map(|c| c.volume()).sum()
 }
 
 #[aoc_generator(day22)]
@@ -202,7 +382,7 @@ fn input_generator(input: &str) -> Result<Input> {
 }
 
 #[aoc(day22, part1)]
-fn part1(input: &Input) -> Result<i64> {
+fn part1(input: &[Cube]) -> Result<i64> {
     let mut result = 0;
     for (x, y, z) in iproduct!(-50..=50, -50..=50, -50..=50) {
         let mut curr_status = false;
@@ -225,9 +405,21 @@ fn part1(input: &Input) -> Result<i64> {
     Ok(result)
 }
 
+#[aoc(day22, part1, shattered)]
+fn part1_shattered(input: &[Cube]) -> Result<i64> {
+    let mut init = vec![];
+    for c in input {
+        if !c.is_init() {
+            break;
+        }
+        init.push(c.to_owned());
+    }
+    Ok(find_volume(&init))
+}
+
 #[aoc(day22, part2)]
-fn part2(input: &Input) -> Result<u64> {
-    Ok(2)
+fn part2(input: &[Cube]) -> Result<i64> {
+    Ok(find_volume(input))
 }
 
 #[cfg(test)]
@@ -257,6 +449,67 @@ mod tests {
     on x=-54112..-39298,y=-85059..-49293,z=-27449..7877
     on x=967..23432,y=45373..81175,z=27513..53682";
 
+    const SMOKE2: &str = "on x=-5..47,y=-31..22,z=-19..33
+on x=-44..5,y=-27..21,z=-14..35
+on x=-49..-1,y=-11..42,z=-10..38
+on x=-20..34,y=-40..6,z=-44..1
+off x=26..39,y=40..50,z=-2..11
+on x=-41..5,y=-41..6,z=-36..8
+off x=-43..-33,y=-45..-28,z=7..25
+on x=-33..15,y=-32..19,z=-34..11
+off x=35..47,y=-46..-34,z=-11..5
+on x=-14..36,y=-6..44,z=-16..29
+on x=-57795..-6158,y=29564..72030,z=20435..90618
+on x=36731..105352,y=-21140..28532,z=16094..90401
+on x=30999..107136,y=-53464..15513,z=8553..71215
+on x=13528..83982,y=-99403..-27377,z=-24141..23996
+on x=-72682..-12347,y=18159..111354,z=7391..80950
+on x=-1060..80757,y=-65301..-20884,z=-103788..-16709
+on x=-83015..-9461,y=-72160..-8347,z=-81239..-26856
+on x=-52752..22273,y=-49450..9096,z=54442..119054
+on x=-29982..40483,y=-108474..-28371,z=-24328..38471
+on x=-4958..62750,y=40422..118853,z=-7672..65583
+on x=55694..108686,y=-43367..46958,z=-26781..48729
+on x=-98497..-18186,y=-63569..3412,z=1232..88485
+on x=-726..56291,y=-62629..13224,z=18033..85226
+on x=-110886..-34664,y=-81338..-8658,z=8914..63723
+on x=-55829..24974,y=-16897..54165,z=-121762..-28058
+on x=-65152..-11147,y=22489..91432,z=-58782..1780
+on x=-120100..-32970,y=-46592..27473,z=-11695..61039
+on x=-18631..37533,y=-124565..-50804,z=-35667..28308
+on x=-57817..18248,y=49321..117703,z=5745..55881
+on x=14781..98692,y=-1341..70827,z=15753..70151
+on x=-34419..55919,y=-19626..40991,z=39015..114138
+on x=-60785..11593,y=-56135..2999,z=-95368..-26915
+on x=-32178..58085,y=17647..101866,z=-91405..-8878
+on x=-53655..12091,y=50097..105568,z=-75335..-4862
+on x=-111166..-40997,y=-71714..2688,z=5609..50954
+on x=-16602..70118,y=-98693..-44401,z=5197..76897
+on x=16383..101554,y=4615..83635,z=-44907..18747
+off x=-95822..-15171,y=-19987..48940,z=10804..104439
+on x=-89813..-14614,y=16069..88491,z=-3297..45228
+on x=41075..99376,y=-20427..49978,z=-52012..13762
+on x=-21330..50085,y=-17944..62733,z=-112280..-30197
+on x=-16478..35915,y=36008..118594,z=-7885..47086
+off x=-98156..-27851,y=-49952..43171,z=-99005..-8456
+off x=2032..69770,y=-71013..4824,z=7471..94418
+on x=43670..120875,y=-42068..12382,z=-24787..38892
+off x=37514..111226,y=-45862..25743,z=-16714..54663
+off x=25699..97951,y=-30668..59918,z=-15349..69697
+off x=-44271..17935,y=-9516..60759,z=49131..112598
+on x=-61695..-5813,y=40978..94975,z=8655..80240
+off x=-101086..-9439,y=-7088..67543,z=33935..83858
+off x=18020..114017,y=-48931..32606,z=21474..89843
+off x=-77139..10506,y=-89994..-18797,z=-80..59318
+off x=8476..79288,y=-75520..11602,z=-96624..-24783
+on x=-47488..-1262,y=24338..100707,z=16292..72967
+off x=-84341..13987,y=2429..92914,z=-90671..-1318
+off x=-37810..49457,y=-71013..-7894,z=-105357..-13188
+off x=-27365..46395,y=31009..98017,z=15428..76570
+off x=-70369..-16548,y=22648..78696,z=-1892..86821
+on x=-53470..21291,y=-120233..-33476,z=-44150..38147
+off x=-93533..-4276,y=-16170..68771,z=-104985..-24507";
+
     #[test]
     fn smoke1() -> Result<()> {
         let input = input_generator(SMOKE)?;
@@ -265,9 +518,35 @@ mod tests {
     }
 
     #[test]
-    fn smoke2() -> Result<()> {
+    fn smoke1_shattered() -> Result<()> {
         let input = input_generator(SMOKE)?;
+        assert_eq!(590784, part1_shattered(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke1_shattered_small() -> Result<()> {
+        let input = input_generator(
+            "on x=10..12,y=10..12,z=10..12
+on x=11..13,y=11..13,z=11..13
+off x=9..11,y=9..11,z=9..11
+on x=10..10,y=10..10,z=10..10",
+        )?;
+        assert_eq!(39, part1_shattered(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke2() -> Result<()> {
+        let input = input_generator(SMOKE2)?;
         assert_eq!(2758514936282235, part2(&input)?);
+        Ok(())
+    }
+
+    #[test]
+    fn smoke2_init() -> Result<()> {
+        let input = input_generator(SMOKE2)?;
+        assert_eq!(474140, part1_shattered(&input)?);
         Ok(())
     }
 }

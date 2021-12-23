@@ -249,91 +249,7 @@ impl Cube {
         }
 
         if other.on {
-            if other.x_min() < overlap.x_min() {
-                let x_max = overlap.x_min() - 1;
-                let y_min = other.y_min().max(overlap.y_min());
-                let y_max = other.y_max().min(overlap.y_max());
-                let z_min = other.z_min().max(overlap.z_min());
-                let z_max = other.z_max().min(overlap.z_max());
-                result.push(Cube::new(
-                    true,
-                    other.x_min(),
-                    x_max,
-                    y_min,
-                    y_max,
-                    z_min,
-                    z_max,
-                ));
-            }
-            if other.x_max() > overlap.x_max() {
-                let x_min = overlap.x_max() + 1;
-                let y_min = other.y_min().max(overlap.y_min());
-                let y_max = other.y_max().min(overlap.y_max());
-                let z_min = other.z_min().max(overlap.z_min());
-                let z_max = other.z_max().min(overlap.z_max());
-                result.push(Cube::new(
-                    true,
-                    x_min,
-                    other.x_max(),
-                    y_min,
-                    y_max,
-                    z_min,
-                    z_max,
-                ));
-            }
-            if other.y_min() < overlap.y_min() {
-                let y_max = overlap.y_min() - 1;
-                let z_min = other.z_min().max(overlap.z_min());
-                let z_max = other.z_max().min(overlap.z_max());
-                result.push(Cube::new(
-                    true,
-                    other.x_min(),
-                    other.x_max(),
-                    other.y_min(),
-                    y_max,
-                    z_min,
-                    z_max,
-                ));
-            }
-            if other.y_max() > overlap.y_max() {
-                let y_min = overlap.y_max() + 1;
-                let z_min = other.z_min().max(overlap.z_min());
-                let z_max = other.z_max().min(overlap.z_max());
-                result.push(Cube::new(
-                    true,
-                    other.x_min(),
-                    other.x_max(),
-                    y_min,
-                    other.y_max(),
-                    z_min,
-                    z_max,
-                ));
-            }
-            if other.z_min() < overlap.z_min() {
-                let z_max = overlap.z_min() - 1;
-                result.push(Cube::new(
-                    true,
-                    other.x_min(),
-                    other.x_max(),
-                    other.y_min(),
-                    other.y_max(),
-                    other.z_min(),
-                    z_max,
-                ));
-            }
-            if other.z_max() > overlap.z_max() {
-                let z_min = overlap.z_max() + 1;
-                result.push(Cube::new(
-                    true,
-                    other.x_min(),
-                    other.x_max(),
-                    other.y_min(),
-                    other.y_max(),
-                    z_min,
-                    other.z_max(),
-                ));
-            }
-            result.push(overlap);
+            result.push(other.to_owned());
         }
         Some(result)
     }
@@ -417,7 +333,7 @@ fn part1_shattered(input: &[Cube]) -> Result<i64> {
     Ok(find_volume(&init))
 }
 
-#[aoc(day22, part2)]
+#[aoc(day22, part2, shattered)]
 fn part2(input: &[Cube]) -> Result<i64> {
     Ok(find_volume(input))
 }

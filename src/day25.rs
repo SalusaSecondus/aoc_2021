@@ -3,17 +3,17 @@ use regex::Regex;
 
 type Input = u32;
 
-#[aoc_generator(day_template)]
+#[aoc_generator(day25)]
 fn input_generator(input: &str) -> Result<Input> {
     Ok(0)
 }
 
-#[aoc(day_template, part1)]
+#[aoc(day25, part1)]
 fn part1(input: &Input) -> Result<i32> {
     Ok(1)
 }
 
-#[aoc(day_template, part2)]
+#[aoc(day25, part2)]
 fn part2(input: &Input) -> Result<u64> {
     Ok(2)
 }

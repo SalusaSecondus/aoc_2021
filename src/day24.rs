@@ -43,24 +43,23 @@ pub fn driver(
     }
 
     for digit in digits.iter() {
-        let mut working_copy = registers.clone();
+        let mut registers = registers;
         if step == 1 {
-            println!("Candidate: {:?} -> {:?}", serial, registers);
+            println!("Candidate: {:?} -> {:?} (Saved states: {})", serial, registers, seen.len());
         }
         serial[step as usize] = *digit;
-        checksum(step, serial, &mut working_copy);
-        if step == 13 && working_copy[3] == 0 {
+        checksum(step, serial, &mut registers);
+        if step == 13 && registers[3] == 0 {
             return true;
         }
-        if step < 13 {
-            if driver(digits, step + 1, serial, working_copy, seen) {
-                return true;
-            }
+        if step < 13 && driver(digits, step + 1, serial, registers, seen) {
+            return true;
         }
     }
     false
 }
 
+#[allow(clippy::assign_op_pattern)]
 pub fn checksum(step: u8, serial: &[u8], registers: &mut [i64; 4]) {
     match step {
         0 => {

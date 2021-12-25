@@ -83,8 +83,8 @@ where
 {
     #[allow(clippy::needless_range_loop)]
     fn transpose(&self) -> Self {
-        let old_y = self.len();
-        let old_x = self[0].len();
+        let old_x = self.len();
+        let old_y = self[0].len();
         let mut result = vec![vec![]; old_y];
 
         for y in 0..old_y {

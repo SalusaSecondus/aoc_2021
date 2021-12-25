@@ -270,6 +270,9 @@ fn solve(world: World) -> i32 {
     let mut cheapest = i32::MAX;
     while !queue.is_empty() {
         let current = queue.pop().unwrap();
+        if current.cost > cheapest {
+            return cheapest;
+        }
         if !visited.insert(current.world.to_owned()) {
             continue;
         }
@@ -295,6 +298,9 @@ fn solve2(world: World2) -> i32 {
     let mut cheapest = i32::MAX;
     while !queue.is_empty() {
         let current = queue.pop().unwrap();
+        if current.cost > cheapest {
+            return cheapest;
+        }
         if !visited.insert(current.world.to_owned()) {
             continue;
         }
@@ -304,10 +310,11 @@ fn solve2(world: World2) -> i32 {
         // }
         for idx in 0..27 {
             for next in current.world.moves(idx) {
+                let next_cost = next.1 + current.cost;
                 if next.0.win() {
                     // println!("Found solution with cost {}", next.1 + current.cost);
-                    cheapest = cheapest.min(next.1 + current.cost);
-                } else {
+                    cheapest = cheapest.min(next_cost);
+                } else if next_cost < cheapest {
                     queue.push(HeapElement2::new(next.0, next.1 + current.cost));
                 }
             }
